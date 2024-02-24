@@ -14,20 +14,17 @@ module.exports.login = (req, res, next) => {
     return errorFn();
   }
 
-  // Buscar si existe un usuario con ese email
   User.findOne({ email })
     .then(user => {
       if (!user) {
         errorFn();
       } else {
-        // Comparo contraseñas
 
         return user.checkPassword(password)
           .then(match => {
             if (!match) {
               errorFn();
             } else {
-              // Creo el token y lo mando
 
               const token = jwt.sign(
                 { id: user.id },

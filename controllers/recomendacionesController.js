@@ -1,22 +1,23 @@
-// Función para calcular las calorías para ganar masa muscular utilizando la fórmula de Harris-Benedict
+const GPTMessage = require("../models/GPTMessage.model");
+const fetchGpt = require("../middlewares/gpt.middleware");
+
 function calcularCaloriasGanarMasaMuscular(edad, peso, altura, factorActividad, sexo) {
-  // Fórmula de Harris-Benedict para hombres
   if (sexo === 'hombre') {
     const caloriasBase = 66.5 + (13.75 * peso) + (5.003 * altura) - (6.75 * edad);
-    const caloriasGanarMasaMuscular = caloriasBase * factorActividad + 300; // Aumentar 300 calorías para ganar masa muscular
+    const caloriasGanarMasaMuscular = caloriasBase * factorActividad + 300; 
     return caloriasGanarMasaMuscular;
   }
-  // Fórmula de Harris-Benedict para mujeres
+ 
   else if (sexo === 'mujer') {
     const caloriasBase = 655.1 + (9.563 * peso) + (1.85 * altura) - (4.676 * edad);
-    const caloriasGanarMasaMuscular = caloriasBase * factorActividad + 300; // Aumentar 300 calorías para ganar masa muscular
+    const caloriasGanarMasaMuscular = caloriasBase * factorActividad + 300; 
     return caloriasGanarMasaMuscular;
   } else {
     throw new Error('Sexo no válido');
   }
 }
 
-// Función para calcular las calorías para mantener el peso utilizando la fórmula de Harris-Benedict
+
 function calcularCaloriasMantenerPeso(edad, peso, altura, factorActividad, sexo) {
   // Fórmula de Harris-Benedict para hombres
   if (sexo === 'hombre') {
@@ -32,19 +33,15 @@ function calcularCaloriasMantenerPeso(edad, peso, altura, factorActividad, sexo)
   } else {
     throw new Error('Sexo no válido');
   }
-} 
+}
 
-// Exportar la función generarRecetas
-exports.generarRecetas = (req, res) => {
-  // Obtener los datos del usuario desde el cuerpo de la solicitud
+module.exports.generarRecetas = (req, res) => {
   const { objetivo, edad, peso, altura, estado_fisico, preferencias_alimentarias, alergias, sexo } = req.body;
 
-  // Verificar si los datos necesarios están presentes en el cuerpo de la solicitud
   if (!objetivo || !edad || !peso || !altura || !estado_fisico || !sexo) {
     return res.status(400).json({ success: false, message: 'Faltan datos necesarios en la solicitud' });
   }
 
-  // Calcular las calorías necesarias según el objetivo del usuario
   let caloriasNecesarias;
   let factorActividad;
   switch (estado_fisico) {
@@ -64,10 +61,9 @@ exports.generarRecetas = (req, res) => {
       factorActividad = 1.9;
       break;
     default:
-      factorActividad = 1.2; // Por defecto, se asume un factor de actividad sedentario
+      factorActividad = 1.2; 
   }
 
-  // Utilizar promesas para realizar el cálculo de calorías
   Promise.resolve()
     .then(() => {
       switch (objetivo) {
@@ -80,32 +76,68 @@ exports.generarRecetas = (req, res) => {
         default:
           throw new Error('Objetivo no válido');
       }
-      
-      // Calcular las proteínas necesarias (en gramos)
-      const proteinasNecesarias = peso * 2.2; // 2.2 gramos de proteína por kg de peso corporal
-      
-      // Calcular los carbohidratos necesarios (en gramos)
-      const caloriasProteinas = proteinasNecesarias * 4; // 4 calorías por gramo de proteína
-      const caloriasCarbohidratos = caloriasNecesarias - caloriasProteinas; // Restar las calorías de las proteínas
-      const carbohidratosNecesarios = caloriasCarbohidratos / 4; // 4 calorías por gramo de carbohidrato
 
-      // Calcular las grasas necesarias (en gramos)
-      const porcentajeGrasas = 0.3; // Porcentaje de calorías provenientes de grasas (30%)
-      const caloriasGrasas = caloriasNecesarias * porcentajeGrasas; // Calorías provenientes de grasas
-      const grasasNecesarias = caloriasGrasas / 9; // 9 calorías por gramo de grasa
+      const proteinasNecesariasEnGramos = peso * 2.2; 
+
+      const caloriasProteinas = proteinasNecesariasEnGramos * 4;
+      const caloriasCarbohidratos = caloriasNecesarias - caloriasProteinas; 
+      const carbohidratosNecesariosEnGramos = caloriasCarbohidratos / 4; 
+
+      const porcentajeGrasas = 0.3; 
+      const caloriasGrasas = caloriasNecesarias * porcentajeGrasas; 
+      const grasasNecesariasEnGramos = caloriasGrasas / 9; 
+
+      const gramosDeProteinaPorComida = proteinasNecesariasEnGramos / 3;
+      const gramosDeCarbohidratosPorComida = carbohidratosNecesariosEnGramos / 3;
+      const gramosDeGrasaNecesariosPorComida = grasasNecesariasEnGramos / 3;
+   
+      let questionToChatGPT = 'Piensa que eres un experto en nutrición.' +
+        `Dame recetas de desayuno con ${gramosDeProteinaPorComida} gramos de proteina, ${gramosDeCarbohidratosPorComida} gramos de carbohidratos y ${gramosDeGrasaNecesariosPorComida} gramos de grasa.` +
+        `También dame recetas de comida con ${gramosDeProteinaPorComida} gramos de proteina, ${gramosDeCarbohidratosPorComida} gramos de carbohidratos y ${gramosDeGrasaNecesariosPorComida} gramos de grasa.` +
+        `También dame recetas de cena con ${gramosDeProteinaPorComida} gramos de proteina, ${gramosDeCarbohidratosPorComida} gramos de carbohidratos y ${gramosDeGrasaNecesariosPorComida} gramos de grasa
+        
+        .` +
+        `Devuelve las recetas en un JSON que desayuno contenga las suyas, comida las suyas y cena las suyas`;
       
-      // Devolver las calorías, proteínas, carbohidratos, grasas y sexo necesarios para el usuario
-      res.json({
-        success: true,
-        message: 'Datos calculados con éxito',
-        data: {
-          caloriasNecesarias,
-          proteinasNecesarias,
-          carbohidratosNecesarios,
-          grasasNecesarias,
-          sexo
-        }
-      });
+        console.log("Pregunta para el gtp: " + questionToChatGPT);
+     
+      GPTMessage.findOne({ question: questionToChatGPT })
+        .then((pregunta) => {
+          if (!pregunta) {
+            console.log("No existe la pregunta. Buscando en chat gpt");
+            fetchGpt.fetchGPTData(questionToChatGPT)
+              .then(respuestaGtp => {
+                const recetas = respuestaGtp.choices[0].message.content;
+                console.log("Respuesta consulta gpt: "+ JSON.stringify(recetas));
+                let objetoParaGuardar = {
+                  question: questionToChatGPT,
+                  response: recetas
+                };
+                GPTMessage.create(objetoParaGuardar);
+                return res.json({
+                  success: true,
+                  message: 'Datos calculados con éxito',
+                  data: JSON.parse(objetoParaGuardar.response)
+                });
+              }) 
+              .catch(error => {
+                console.log("Error procesando respuesta chatGPT -> " + error);
+                throw error;
+              });
+        
+          } else {
+            console.log("La pregunta ya existe: " + pregunta);
+            return res.json({
+              success: true,
+              message: 'Datos calculados con éxito',
+              data: JSON.parse(pregunta.response)
+            });
+          }
+        })
+        .catch((err) => {
+          next(err)
+        })
+  
     })
     .catch(error => {
       console.error('Error al calcular los datos necesarios:', error);

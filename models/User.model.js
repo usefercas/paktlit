@@ -40,12 +40,10 @@ const userSchema = mongoose.Schema(
   }
 );
 
-// Método para comparar contraseñas
 userSchema.methods.checkPassword = function (passwordToCompare) {
   return bcrypt.compare(passwordToCompare, this.password);
 };
 
-// Presave para guardar la contraseña hasheada
 userSchema.pre("save", function (next) {
   if (this.isModified("password")) {
     bcrypt

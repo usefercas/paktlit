@@ -1,3 +1,4 @@
+require('dotenv').config();
 const express = require('express');
 const logger = require('morgan');
 const mongoose = require('mongoose');
@@ -5,7 +6,6 @@ const jwt = require('jsonwebtoken');
 const cors = require('cors');
 const createError = require('http-errors');
 const { StatusCodes } = require('http-status-codes');
-/*const openai = require('openai'); // Importa la biblioteca de OpenAI*/
 const routes = require('./config/router.config');
 
 require('./config/db.config.js');
