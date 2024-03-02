@@ -4,13 +4,13 @@ const fetchGpt = require("../middlewares/gpt.middleware");
 function calcularCaloriasGanarMasaMuscular(edad, peso, altura, factorActividad, sexo) {
   if (sexo === 'hombre') {
     const caloriasBase = 66.5 + (13.75 * peso) + (5.003 * altura) - (6.75 * edad);
-    const caloriasGanarMasaMuscular = caloriasBase * factorActividad + 300; 
+    const caloriasGanarMasaMuscular = caloriasBase * factorActividad + 300;
     return caloriasGanarMasaMuscular;
   }
- 
+
   else if (sexo === 'mujer') {
     const caloriasBase = 655.1 + (9.563 * peso) + (1.85 * altura) - (4.676 * edad);
-    const caloriasGanarMasaMuscular = caloriasBase * factorActividad + 300; 
+    const caloriasGanarMasaMuscular = caloriasBase * factorActividad + 300;
     return caloriasGanarMasaMuscular;
   } else {
     throw new Error('Sexo no válido');
@@ -61,7 +61,7 @@ module.exports.generarRecetas = (req, res) => {
       factorActividad = 1.9;
       break;
     default:
-      factorActividad = 1.2; 
+      factorActividad = 1.2;
   }
 
   Promise.resolve()
@@ -77,38 +77,40 @@ module.exports.generarRecetas = (req, res) => {
           throw new Error('Objetivo no válido');
       }
 
-      const proteinasNecesariasEnGramos = peso * 2.2; 
+      const proteinasNecesariasEnGramos = peso * 2.2;
 
       const caloriasProteinas = proteinasNecesariasEnGramos * 4;
-      const caloriasCarbohidratos = caloriasNecesarias - caloriasProteinas; 
-      const carbohidratosNecesariosEnGramos = caloriasCarbohidratos / 4; 
+      const caloriasCarbohidratos = caloriasNecesarias - caloriasProteinas;
+      const carbohidratosNecesariosEnGramos = caloriasCarbohidratos / 4;
 
-      const porcentajeGrasas = 0.3; 
-      const caloriasGrasas = caloriasNecesarias * porcentajeGrasas; 
-      const grasasNecesariasEnGramos = caloriasGrasas / 9; 
+      const porcentajeGrasas = 0.3;
+      const caloriasGrasas = caloriasNecesarias * porcentajeGrasas;
+      const grasasNecesariasEnGramos = caloriasGrasas / 9;
 
       const gramosDeProteinaPorComida = proteinasNecesariasEnGramos / 3;
       const gramosDeCarbohidratosPorComida = carbohidratosNecesariosEnGramos / 3;
       const gramosDeGrasaNecesariosPorComida = grasasNecesariasEnGramos / 3;
-   
+
+
       let questionToChatGPT = 'Piensa que eres un experto en nutrición.' +
-        `Dame recetas de desayuno con ${gramosDeProteinaPorComida} gramos de proteina, ${gramosDeCarbohidratosPorComida} gramos de carbohidratos y ${gramosDeGrasaNecesariosPorComida} gramos de grasa.` +
-        `También dame recetas de comida con ${gramosDeProteinaPorComida} gramos de proteina, ${gramosDeCarbohidratosPorComida} gramos de carbohidratos y ${gramosDeGrasaNecesariosPorComida} gramos de grasa.` +
-        `También dame recetas de cena con ${gramosDeProteinaPorComida} gramos de proteina, ${gramosDeCarbohidratosPorComida} gramos de carbohidratos y ${gramosDeGrasaNecesariosPorComida} gramos de grasa
+        `Dame 7 recetas de desayuno diferentes con ${gramosDeProteinaPorComida} gramos de proteina, ${gramosDeCarbohidratosPorComida} gramos de carbohidratos y ${gramosDeGrasaNecesariosPorComida} gramos de grasa.` +
+        `También 7 dame recetas de comida diferentes con ${gramosDeProteinaPorComida} gramos de proteina, ${gramosDeCarbohidratosPorComida} gramos de carbohidratos y ${gramosDeGrasaNecesariosPorComida} gramos de grasa.` +
+        `También 7 dame recetas de cena diferentes con ${gramosDeProteinaPorComida} gramos de proteina, ${gramosDeCarbohidratosPorComida} gramos de carbohidratos y ${gramosDeGrasaNecesariosPorComida} gramos de grasa
         
         .` +
-        `Devuelve las recetas en un JSON que desayuno contenga las suyas, comida las suyas y cena las suyas`;
-      
-        console.log("Pregunta para el gtp: " + questionToChatGPT);
-     
+        `Devuelve las recetas en un JSON que desayuno contenga las suyas, comida las suyas y cena las suyas. Asegurate que el JSON esta bien formado`;
+
+      console.log("Pregunta para el gtp: " + questionToChatGPT);
+
       GPTMessage.findOne({ question: questionToChatGPT })
         .then((pregunta) => {
-          if (!pregunta) {
+          if (!pregunta) { // todo comprobar el status code para errores
             console.log("No existe la pregunta. Buscando en chat gpt");
             fetchGpt.fetchGPTData(questionToChatGPT)
               .then(respuestaGtp => {
+                console.log("respuesta que recibo-->" + JSON.stringify(respuestaGtp));
                 const recetas = respuestaGtp.choices[0].message.content;
-                console.log("Respuesta consulta gpt: "+ JSON.stringify(recetas));
+                console.log("Respuesta consulta gpt: " + JSON.stringify(recetas));
                 let objetoParaGuardar = {
                   question: questionToChatGPT,
                   response: recetas
@@ -119,12 +121,12 @@ module.exports.generarRecetas = (req, res) => {
                   message: 'Datos calculados con éxito',
                   data: JSON.parse(objetoParaGuardar.response)
                 });
-              }) 
+              })
               .catch(error => {
                 console.log("Error procesando respuesta chatGPT -> " + error);
                 throw error;
               });
-        
+
           } else {
             console.log("La pregunta ya existe: " + pregunta);
             return res.json({
@@ -135,9 +137,9 @@ module.exports.generarRecetas = (req, res) => {
           }
         })
         .catch((err) => {
-          next(err)
+          console.log("Error con recomendaciones : " + err);
         })
-  
+
     })
     .catch(error => {
       console.error('Error al calcular los datos necesarios:', error);
