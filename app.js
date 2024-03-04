@@ -30,9 +30,10 @@ app.use('/api', routes);
 /* Handle errors */
 
 // Middleware para cuando no encuentra ruta
+
 app.use((req, res, next) => {
   next(createError(StatusCodes.NOT_FOUND, "Route not found"));
-});
+});//
 
 // Middleware genérico de errores
 app.use((error, req, res, next) => {

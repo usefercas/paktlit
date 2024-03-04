@@ -11,7 +11,7 @@ const recomendacionesController = require('../controllers/recomendacionesControl
 
 
 // Auth
-router.post('/login', authController.login);
+router.post('/login',authMiddleware.isAuthenticated, authController.login);
 
 // Users
 router.get('/users/me', authMiddleware.isAuthenticated, usersController.getCurrentUser);
