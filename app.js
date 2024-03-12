@@ -27,6 +27,8 @@ app.use(logger('dev'));
 const routes = require('./config/router.config');
 app.use('/api', routes);
 
+
+
 /* Handle errors */
 
 // Middleware para cuando no encuentra ruta

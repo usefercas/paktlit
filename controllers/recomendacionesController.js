@@ -90,7 +90,12 @@ module.exports.generarRecetas = (req, res) => {
       const gramosDeProteinaPorComida = proteinasNecesariasEnGramos / 3;
       const gramosDeCarbohidratosPorComida = carbohidratosNecesariosEnGramos / 3;
       const gramosDeGrasaNecesariosPorComida = grasasNecesariasEnGramos / 3;
-
+      const totalCaloriasPorComida = caloriasCarbohidratos + caloriasGrasas + caloriasProteinas / 3;
+      let xxx = 'Piensa que eres un experto en nutrición.' +
+      `Dame 7 recetas de desayuno diferentes con ${totalCaloriasPorComida} calorias por comida.` +
+      `También 7 dame recetas de comida diferentes con ${totalCaloriasPorComida} calorias por comida..` +
+      `También 7 dame recetas de cena diferentes con ${totalCaloriasPorComida} calorias por comida.` +
+      `Devuelve las recetas en un JSON que desayuno contenga las suyas, comida las suyas y cena las suyas.`;
 
       let questionToChatGPT = 'Piensa que eres un experto en nutrición.' +
         `Dame 7 recetas de desayuno diferentes con ${gramosDeProteinaPorComida} gramos de proteina, ${gramosDeCarbohidratosPorComida} gramos de carbohidratos y ${gramosDeGrasaNecesariosPorComida} gramos de grasa.` +
@@ -98,29 +103,42 @@ module.exports.generarRecetas = (req, res) => {
         `También 7 dame recetas de cena diferentes con ${gramosDeProteinaPorComida} gramos de proteina, ${gramosDeCarbohidratosPorComida} gramos de carbohidratos y ${gramosDeGrasaNecesariosPorComida} gramos de grasa
         
         .` +
-        `Devuelve las recetas en un JSON que desayuno contenga las suyas, comida las suyas y cena las suyas. Asegurate que el JSON esta bien formado`;
+        `Devuelve las recetas en un JSON que desayuno contenga las suyas, comida las suyas y cena las suyas.`;
 
-      console.log("Pregunta para el gtp: " + questionToChatGPT);
+      console.log("Pregunta para el gtp: " + xxx);
 
-      GPTMessage.findOne({ question: questionToChatGPT })
+      GPTMessage.findOne({ question: xxx })
         .then((pregunta) => {
           if (!pregunta) { // todo comprobar el status code para errores
             console.log("No existe la pregunta. Buscando en chat gpt");
-            fetchGpt.fetchGPTData(questionToChatGPT)
+            fetchGpt.fetchGPTData(xxx)
               .then(respuestaGtp => {
                 console.log("respuesta que recibo-->" + JSON.stringify(respuestaGtp));
-                const recetas = respuestaGtp.choices[0].message.content;
+                const recetas = JSON.stringify(respuestaGtp.choices[0].message.content);
                 console.log("Respuesta consulta gpt: " + JSON.stringify(recetas));
                 let objetoParaGuardar = {
                   question: questionToChatGPT,
                   response: recetas
                 };
-                GPTMessage.create(objetoParaGuardar);
-                return res.json({
-                  success: true,
-                  message: 'Datos calculados con éxito',
-                  data: JSON.parse(objetoParaGuardar.response)
+            GPTMessage.create(objetoParaGuardar)
+                .then(createdM => {
+                  console.log("Creado: " + createdM._id);
+                  return res.json({
+                    success: true,
+                    message: 'Datos calculados con éxito',
+                    userId: createdM._id,
+                    messageId: createdM._id, 
+                    data: JSON.parse(objetoParaGuardar.response)
+                  });
                 });
+      
+                // return res.json({
+                //   success: true,
+                //   message: 'Datos calculados con éxito',
+                //   userId: createdMessage.id,
+                //   messageId: pregunta.id, 
+                //   data: JSON.parse(objetoParaGuardar.response)
+                // });
               })
               .catch(error => {
                 console.log("Error procesando respuesta chatGPT -> " + error);
@@ -132,6 +150,8 @@ module.exports.generarRecetas = (req, res) => {
             return res.json({
               success: true,
               message: 'Datos calculados con éxito',
+              userId: "xzzxxx",
+              messageId: pregunta.id, 
               data: JSON.parse(pregunta.response)
             });
           }

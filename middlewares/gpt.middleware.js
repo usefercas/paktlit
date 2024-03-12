@@ -16,7 +16,7 @@ module.exports.fetchGPTData = (message) => {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-      'Authorization': `Bearer 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`
+      'Authorization': `Bearer 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`
     },
     body: JSON.stringify(body)
   })

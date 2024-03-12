@@ -1,9 +1,14 @@
 const cloudinary = require('cloudinary').v2;
+const dotenv = require('dotenv');
 
+// Cargar las variables de entorno desde el archivo .env
+dotenv.config();
+
+// Configurar Cloudinary utilizando las variables de entorno
 cloudinary.config({
-  cloud_name: '313751292994883', // Reemplaza 'tu_cloud_name' con tu cloud_name
-  api_key: '313751292994883',     // Reemplaza 'tu_api_key' con tu API Key
-  api_secret: 'tu_api_secret'     // Reemplaza 'tu_api_secret' con tu API Secret
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET
 });
 
 const multer = require('multer');

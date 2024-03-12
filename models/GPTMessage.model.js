@@ -1,5 +1,6 @@
 const mongoose = require('mongoose');
 
+
 const gptMessageSchema = new mongoose.Schema(
   {
     question: {
